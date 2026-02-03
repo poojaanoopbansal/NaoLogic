@@ -42,9 +42,10 @@ export class HomePage implements OnInit {
     year: this.todayDate.getFullYear(),
     day: this.todayDate.getDate()
   };
-  workOrderBarRadiusData: { workOrder?: WorkOrderDocument, barWidth?: number, startDatePoint?: number } = {};
+  workOrderBarRadiusData: { workOrder?: WorkOrderDocument, barWidth?: number, startDatePoint?: number, isContainToday?: boolean } = {};
   workCenterIDKeysNamePairsList: { [key: string]: string } = {};
   todayIndex: number = 0;
+  CSRF: any;
   @ViewChild(CdkVirtualScrollViewport) viewport!: CdkVirtualScrollViewport;
   constructor(private cdr: ChangeDetectorRef) {
 
@@ -88,8 +89,9 @@ export class HomePage implements OnInit {
         endDateObj = new Date(endDateObj.getFullYear(), endDateObj.getMonth(), 1);
         startDateTimeScaleObject = new Date(`${startDate.month} 1, ${startDate.year}`);
         if (startDateTimeScaleObject.getTime() >= startDateObj.getTime() && startDateTimeScaleObject.getTime() <= endDateObj.getTime()) {
-          this.setBarRadius(startDateObj, endDateObj, startDateTimeScaleObject, data);
           //the first block will have company name
+
+          this.workOrderBarRadiusData.isContainToday = true;
           if (startDateTimeScaleObject.getTime() === startDateObj.getTime()) {
             data.barWidth = this.setWidthForBar(workOrder, data);
           }
@@ -106,7 +108,6 @@ export class HomePage implements OnInit {
       }
     });
     this.workOrderBarRadiusData = workOrdersList && workOrdersList?.length > 0 ? { workOrder: workOrdersList[0], ...data } : {};
-    // return workOrdersList && workOrdersList?.length > 0 ? workOrdersList[0].data.status : 0;
   }
 
 
@@ -118,27 +119,18 @@ export class HomePage implements OnInit {
     let day = startDateObj.getDate();
     let month = startDateObj.getMonth();
     let year = startDateObj.getFullYear();
-    // Calculate the number of days in the month
     let daysInMonth = new Date(year, month + 1, 0).getDate();
-    // Calculate the percentage of the month that has passed
     let percentage = (day / daysInMonth);
+    //calculated to set left property since the rest of the days will not be included
     data.startDatePoint = percentage * 114;
     let diffTime = Math.abs(endDateObj.getTime() - startDateObj.getTime());
     let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    //calculated the width of the bar 
     return ((12 * this.ITEM_SIZE) / 365) * diffDays;
   }
 
-  setBarRadius(startDateObj: Date, endDateObj: Date, startDateTimeScaleObject: Date, data: any) {
-    if (startDateObj.getTime() === startDateTimeScaleObject.getTime()) {
-      data.isBarRadiusLeft = true;
-    }
-    if (endDateObj.getTime() === startDateTimeScaleObject.getTime()) {
-      data.isBarRadiusRight = true;
-    }
-  }
-
   onTimeScaleChange(event: any) {
-    //console.log(event);
+
   }
 
   scrollToToday() {
@@ -187,7 +179,6 @@ export class HomePage implements OnInit {
       this.setIndexForVisibleTodaysDate();
     }, 100);
   }
-  CSRF: any;
 
   trackByIndex(index: number, item: any) {
     return item.month + '-' + item.year + '-' + item.day;
