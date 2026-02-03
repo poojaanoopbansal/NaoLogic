@@ -1,0 +1,85 @@
+<div class="container">
+    <div class="header">
+        <div class="logo" alt="Your Website Logo"></div>
+        <h1>Work Orders</h1>
+        <div class="flex-container time-scale-container">
+            <div class="timescale-label">Timescale</div>
+            <div class="time-scale-options flex-container">
+                <ng-select [clearable]="false" [items]="timeScaleOptions" [(ngModel)]="selectedTimeScale"
+                    bindLabel="label" bindValue="value" (change)="onTimeScaleChange($event)">
+                </ng-select>
+            </div>
+        </div>
+    </div>
+    <div class="flex-container time-scale-section">
+        <div class="work-center-name-container">
+            <div class="work-center-name-header">Work Center</div>
+            @for(workCenter of workCenterList; track $index) {
+            <div class="work-center-name" [class.first-work-center]="$first">{{ workCenter.data.name }}</div>
+            }
+        </div>
+        <!-- <cdk-virtual-scroll-viewport #viewport orientation="horizontal" [itemSize]="ITEM_SIZE "
+            class="calendar-viewport" (scrolledIndexChange)="onScroll($event)">
+            <div class="time-scale-scroll">
+                <table class="time-scale-table">
+                    <tr>
+                        <th *cdkVirtualFor="let month of timeScaleList; 
+                        let i = index; trackBy: trackByIndex" class="time-scale-cell-header"
+                            id="{{month.month}}-{{month.day}}-{{month.year}}" [attr.data-index]="i">
+                            {{ month.month }} {{ month.year }}
+                            <div class="current-date"
+                                *ngIf="todayIndex!==-1 && todaysDateObject.month === month.month && todaysDateObject.year === month.year && todaysDateObject.day === month.day">
+                                Current Month</div>
+                        </th>
+                    </tr>
+                    <tr class="time-scale-cell-data second-row">
+                        @for(item of timeScaleList; track $index) {
+                        <td [class.current-day]="todaysDateObject.month === item.month && todaysDateObject.year === item.year && todaysDateObject.day === item.day"
+                            [class.current-before-day]="todayIndex-1 === $index">{{ todayIndex }}</td>
+                        }
+                    </tr>
+                </table>
+            </div>
+        </cdk-virtual-scroll-viewport> -->
+        <cdk-virtual-scroll-viewport #viewport orientation="horizontal" [itemSize]="ITEM_SIZE "
+            class="calendar-viewport" (scrolledIndexChange)="onScroll($event)">
+            <div class="time-scale-scroll">
+                <div class="time-scale-table">
+                    <div class="flex-container">
+                        <div *cdkVirtualFor="let month of timeScaleList; 
+                        let i = index; trackBy: trackByIndex" id="{{month.month}}-{{month.day}}-{{month.year}}"
+                            [attr.data-index]="i">
+                            <div class="time-scale-cell-header">{{ month.month }} {{ month.year }}</div>
+                            <div class="current-date"
+                                *ngIf="todayIndex!==-1 && todaysDateObject.month === month.month && todaysDateObject.year === month.year && todaysDateObject.day === month.day">
+                                Current Month
+                            </div>
+                            @for (workcenter of workCenterList; track $index) {
+
+                            <span [style.display]="'none'">
+                                {{findWorkCenterNameInCurrentTimeScale(workcenter.docId,
+                                month)}}</span>
+                            <div class="time-scale-cell-data"
+                                [ngClass]="[$index === 0 ? 'first-row-data' : 'other-rows-data',
+                            (todayIndex!==-1 && todaysDateObject.month === month.month && todaysDateObject.year === month.year && todaysDateObject.day === month.day)?'current-day': '']">
+                                <div *ngIf="workOrderBarRadiusData.startDatePoint"
+                                    class="bar bar-{{workOrderBarRadiusData.workOrder?.data?.status}}"
+                                    [style.left.px]="workOrderBarRadiusData.startDatePoint"
+                                    [style.width.px]="workOrderBarRadiusData.barWidth">
+                                    <span class="pl-8">{{workOrderBarRadiusData.workOrder?.data?.name|
+                                        titlecase}}</span>
+                                    <span
+                                        class="pr-8 status status-{{workOrderBarRadiusData.workOrder?.data?.status}}">{{workOrderBarRadiusData.workOrder?.data?.status|titlecase}}
+                                    </span>
+                                </div>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </cdk-virtual-scroll-viewport>
+    </div>
+
+
+</div>
