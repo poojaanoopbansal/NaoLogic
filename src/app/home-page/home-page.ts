@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
-import { TimeScaleDateObject, TimeScaleDateObjectWithBarRadius, WorkCenterDocument, WorkOrderDocument, WorkOrderObjectListInterface } from '../models/work-order';
+import { TimeScaleDateObject, TimeScaleType, WorkCenterDocument, WorkOrderDocument, WorkOrderObjectListInterface } from '../models/work-order';
 import { WorkConters, WorkOrders } from '../mock-data/mock-data';
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { ScrollingModule } from '@angular/cdk/scrolling';
@@ -14,16 +14,16 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
   styleUrl: './home-page.scss',
 })
 export class HomePage implements OnInit {
-
-  selectedTimeScale = 'Month';
+  TimeScaleType = TimeScaleType;
+  selectedTimeScale = this.TimeScaleType.Month;
   timeScaleList: Array<TimeScaleDateObject> = [];
   previousStartIndex: number = 0;
   previousEndIndex: number = 0;
   timeScaleOptions = [
-    { value: 'Hour', label: 'Hour' },
-    { value: 'Day', label: 'Day' },
-    { value: 'Week', label: 'Week' },
-    { value: 'Month', label: 'Month' }
+    { value: this.TimeScaleType.Hour, label: this.TimeScaleType.Hour },
+    { value: this.TimeScaleType.Day, label: this.TimeScaleType.Day },
+    { value: this.TimeScaleType.Week, label: this.TimeScaleType.Week },
+    { value: this.TimeScaleType.Month, label: this.TimeScaleType.Month }
   ];
   @ViewChild('scrollContainer', { static: true })
   scrollContainer!: ElementRef<HTMLDivElement>;
@@ -45,6 +45,7 @@ export class HomePage implements OnInit {
   workOrderBarRadiusData: { workOrder?: WorkOrderDocument, barWidth?: number, startDatePoint?: number } = {};
   workCenterIDKeysNamePairsList: { [key: string]: string } = {};
   todayIndex: number = 0;
+  CSRF: any;
   @ViewChild(CdkVirtualScrollViewport) viewport!: CdkVirtualScrollViewport;
   constructor(private cdr: ChangeDetectorRef) {
 
@@ -81,78 +82,119 @@ export class HomePage implements OnInit {
     let allWorkOrders = this.workCenterObjectList[workCenterId];
     let startDateTimeScaleObject = new Date(`${startDate.month} ${startDate.day}, ${startDate.year}`);
     let workOrdersList = allWorkOrders?.filter((workOrder: WorkOrderDocument) => {
-      let startDateObj = new Date(workOrder.data.startDate);
-      let endDateObj = new Date(workOrder.data.endDate);
-      if (this.selectedTimeScale === 'Month') {
+      let startDaySplit = workOrder.data.startDate.split('-');
+      let endDaySplit = workOrder.data.endDate.split('-');
+      let startDateObj = new Date(+startDaySplit[0], +startDaySplit[1] - 1, +startDaySplit[2]);
+      let endDateObj = new Date(+endDaySplit[0], +endDaySplit[1] - 1, +endDaySplit[2]);
+      if (this.selectedTimeScale === this.TimeScaleType.Month) {
         startDateObj = new Date(startDateObj.getFullYear(), startDateObj.getMonth(), 1);
         endDateObj = new Date(endDateObj.getFullYear(), endDateObj.getMonth(), 1);
         startDateTimeScaleObject = new Date(`${startDate.month} 1, ${startDate.year}`);
         if (startDateTimeScaleObject.getTime() >= startDateObj.getTime() && startDateTimeScaleObject.getTime() <= endDateObj.getTime()) {
-          this.setBarRadius(startDateObj, endDateObj, startDateTimeScaleObject, data);
           //the first block will have company name
           if (startDateTimeScaleObject.getTime() === startDateObj.getTime()) {
-            data.barWidth = this.setWidthForBar(workOrder, data);
+            data.barWidth = this.setWidthForBarForMonth(workOrder, data);
           }
           return { workOrder, ...data };
         } else {
           return null;
         }
-      } else {
-        if (startDateObj.getTime() <= startDateTimeScaleObject.getTime() && endDateObj.getTime() >= startDateTimeScaleObject.getTime()) {
-          return workOrder;
+      } else if (this.selectedTimeScale === this.TimeScaleType.Day) {
+        startDateTimeScaleObject = new Date(`${startDate.month} ${startDate.day}, ${startDate.year}`);
+        if (startDateTimeScaleObject.getTime() >= startDateObj.getTime() && startDateTimeScaleObject.getTime() <= endDateObj.getTime()) {
+          //the first block will have company name
+          const b = { year: startDateObj.getFullYear(), month: startDateObj.getMonth(), day: startDateObj.getDate() };
+          if (startDateTimeScaleObject.getFullYear() === b.year && startDateTimeScaleObject.getMonth() === b.month && startDateTimeScaleObject.getDate() === b.day) {
+            data.barWidth = this.setWidthForBarForDays(workOrder, data);
+          }
+          return { workOrder, ...data };
         } else {
           return null;
         }
       }
     });
     this.workOrderBarRadiusData = workOrdersList && workOrdersList?.length > 0 ? { workOrder: workOrdersList[0], ...data } : {};
-    // return workOrdersList && workOrdersList?.length > 0 ? workOrdersList[0].data.status : 0;
   }
 
 
   //calculate width for bar with fraction
-  setWidthForBar(workOrder: WorkOrderDocument, data: any) {
+  setWidthForBarForMonth(workOrder: WorkOrderDocument, data: any) {
     let startDateObj = new Date(workOrder.data.startDate);
     let endDateObj = new Date(workOrder.data.endDate);
     // Calculate the difference in days
     let day = startDateObj.getDate();
     let month = startDateObj.getMonth();
     let year = startDateObj.getFullYear();
-    // Calculate the number of days in the month
     let daysInMonth = new Date(year, month + 1, 0).getDate();
-    // Calculate the percentage of the month that has passed
     let percentage = (day / daysInMonth);
+    //calculated to set left property since the rest of the days will not be included
     data.startDatePoint = percentage * 114;
     let diffTime = Math.abs(endDateObj.getTime() - startDateObj.getTime());
     let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    //calculated the width of the bar 
     return ((12 * this.ITEM_SIZE) / 365) * diffDays;
   }
 
-  setBarRadius(startDateObj: Date, endDateObj: Date, startDateTimeScaleObject: Date, data: any) {
-    if (startDateObj.getTime() === startDateTimeScaleObject.getTime()) {
-      data.isBarRadiusLeft = true;
-    }
-    if (endDateObj.getTime() === startDateTimeScaleObject.getTime()) {
-      data.isBarRadiusRight = true;
-    }
+  setWidthForBarForDays(workOrder: WorkOrderDocument, data: any) {
+    let startDateObj = new Date(workOrder.data.startDate);
+    let endDateObj = new Date(workOrder.data.endDate);
+    // Calculate the difference in days
+    let day = startDateObj.getDate();
+    let month = startDateObj.getMonth();
+    let year = startDateObj.getFullYear();
+    let daysInMonth = new Date(year, month + 1, 0).getDate();
+    let percentage = (day / daysInMonth);
+    //calculated to set left property since the rest of the days will not be included
+    data.startDatePoint = 1;
+    let diffTime = Math.abs(endDateObj.getTime() - startDateObj.getTime());
+    let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    //calculated the width of the bar 
+    return this.ITEM_SIZE * diffDays;
   }
 
   onTimeScaleChange(event: any) {
-    //console.log(event);
+    this.timeScaleList = [];
+    switch (this.selectedTimeScale) {
+      case this.TimeScaleType.Day:
+        this.generateInitialDays();
+        break;
+      case this.TimeScaleType.Month:
+        this.generateInitialMonths();
+        break;
+    }
+    this.scrollToToday();
   }
 
   scrollToToday() {
-    const todayMonth = this.todayDate.getMonth();
-    const todayYear = this.todayDate.getFullYear();
-    const todayIndex = this.timeScaleList.findIndex(
+    let todayMonth = this.todayDate.getMonth();
+    let todayYear = this.todayDate.getFullYear();
+    let todayDay = this.todayDate.getDate();
+
+    let todayIndex = this.timeScaleList.findIndex(
       m => new Date(`${m.month} 1, ${m.year}`).getMonth() === todayMonth &&
         m.year === todayYear
     );
-
-    if (todayIndex === -1) return; // fallback
-
-    // Option 1: align today to left
-    this.viewport.scrollToIndex(todayIndex - 1, 'smooth');
+    switch (this.selectedTimeScale) {
+      case this.TimeScaleType.Day:
+        let todayMonthName = this.todayDate.toLocaleString('en-US', { month: 'short' });
+        // Find the day index within the month
+        const dayIndex = this.timeScaleList.findIndex(
+          d => d.day === todayDay && d.month === todayMonthName && d.year === todayYear
+        );
+        if (dayIndex !== -1) {
+          this.viewport.scrollToIndex(dayIndex - 1, 'smooth');
+        }
+        break;
+      case this.TimeScaleType.Month:
+        let todayIndex = this.timeScaleList.findIndex(
+          m => new Date(`${m.month} 1, ${m.year}`).getMonth() === todayMonth &&
+            m.year === todayYear
+        );
+        if (todayIndex !== -1) {
+          this.viewport.scrollToIndex(todayIndex - 1, 'smooth');
+        }
+        break;
+    }
     this.isInitialScroll = false;
   }
 
@@ -167,11 +209,25 @@ export class HomePage implements OnInit {
       return;
     }
     if (this.previousEndIndex !== range.end && range.end >= this.timeScaleList.length - 8) {
-      this.appendDates();
+      switch (this.selectedTimeScale) {
+        case this.TimeScaleType.Day:
+          this.appendDays();
+          break;
+        case this.TimeScaleType.Month:
+          this.appendMonths();
+          break;
+      }
       this.previousEndIndex = range.end;
     }
     if ((this.previousStartIndex !== range.start || this.previousStartIndex > range.start) && (range.start < 4 && range.end < this.previousEndIndex)) {
-      this.prependDates(4, range.start);
+      switch (this.selectedTimeScale) {
+        case this.TimeScaleType.Day:
+          this.prependDays(4, range.start);
+          break;
+        case this.TimeScaleType.Month:
+          this.prependMonths(4, range.start);
+          break;
+      }
       this.previousStartIndex = range.start;
       if (this.CSRF) {
         cancelAnimationFrame(this.CSRF);
@@ -187,7 +243,6 @@ export class HomePage implements OnInit {
       this.setIndexForVisibleTodaysDate();
     }, 100);
   }
-  CSRF: any;
 
   trackByIndex(index: number, item: any) {
     return item.month + '-' + item.year + '-' + item.day;
@@ -222,11 +277,71 @@ export class HomePage implements OnInit {
       current.setMonth(current.getMonth() + 1);
     }
 
-    this.prependDates(8);
+    this.prependMonths(8);
+  }
+
+  generateInitialDays() {
+    const today = new Date();
+    let current = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    for (let i = 0; i <= this.itemsPerPage; i++) {
+      this.timeScaleList.push({
+        day: current.getDate(),
+        month: current.toLocaleString('en-US', { month: 'short' }),
+        year: current.getFullYear()
+      });
+
+      // Move to the next day
+      current.setDate(current.getDate() + 1);
+    }
+
+    this.prependDays(8);
+  }
+
+  appendDays() {
+    let lastElemnt = this.timeScaleList[this.timeScaleList.length - 1];
+    const monthIndex = new Date(`${lastElemnt.month} ${lastElemnt.day}, ${lastElemnt.year}`).getMonth();
+    const current = new Date(lastElemnt.year, monthIndex, lastElemnt.day);
+    const newDates: Array<any> = [];
+    current.setDate(current.getDate() + 1);
+    for (let i = 0; i <= this.itemsPerPage; i++) {
+      newDates.push({
+        day: current.getDate(),
+        month: current.toLocaleString('en-US', { month: 'short' }),
+        year: current.getFullYear()
+      });
+
+      // Move to the next day
+      current.setDate(current.getDate() + 1);
+    }
+    setTimeout(() => {
+      this.timeScaleList = [...this.timeScaleList, ...newDates];
+      this.viewport.checkViewportSize();
+    }, 0)
+  }
+
+  prependDays(count: number = this.itemsPerPage, startIndex?: number) {
+    const first = this.timeScaleList[0];
+    const newDates = [];
+    const monthIndex = new Date(`${first.month} 1, ${first.year}`).getMonth();
+    const newMonths: { month: string; year: number; day: number }[] = [];
+    let currentDate = new Date(first.year, monthIndex, first.day);
+    currentDate.setDate(currentDate.getDate() - 1);
+
+    for (let i = 0; i < count; i++) {
+      newMonths.unshift({
+        month: currentDate.toLocaleString('en-US', { month: 'short' }),
+        year: currentDate.getFullYear(),
+        day: currentDate.getDate()
+      });
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
+
+    this.timeScaleList = [...newMonths, ...this.timeScaleList];
   }
 
 
-  prependDates(count: number = this.itemsPerPage, startIndex?: number) {
+  prependMonths(count: number = this.itemsPerPage, startIndex?: number) {
     const first = this.timeScaleList[0];
     const newDates = [];
     const monthIndex = new Date(`${first.month} 1, ${first.year}`).getMonth();
@@ -261,7 +376,7 @@ export class HomePage implements OnInit {
     // });
   }
 
-  appendDates() {
+  appendMonths() {
     const first = this.timeScaleList[this.timeScaleList.length - 1];
     const newDates = [];
     const monthIndex = new Date(`${first.month} 1, ${first.year}`).getMonth();

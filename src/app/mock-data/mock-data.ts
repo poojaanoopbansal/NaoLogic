@@ -45,7 +45,7 @@ export const WorkOrders: WorkOrderDocument[] = [
             "name": "Extrusion Line A",
             "workCenterId": "wc-001",
             "status": "in-progress",
-            "startDate": "2026-01-28",
+            "startDate": "2026-02-02",
             "endDate": "2026-03-29"
         }
     },
@@ -56,7 +56,7 @@ export const WorkOrders: WorkOrderDocument[] = [
             "name": "CNC Machine 1",
             "workCenterId": "wc-002",
             "status": "open",
-            "startDate": "2026-01-30",
+            "startDate": "2026-02-04",
             "endDate": "2026-07-02"
         }
     },
@@ -67,7 +67,7 @@ export const WorkOrders: WorkOrderDocument[] = [
             "name": "Assembly Station",
             "workCenterId": "wc-003",
             "status": "blocked",
-            "startDate": "2026-01-25",
+            "startDate": "2026-02-02",
             "endDate": "2026-03-28"
         }
     },
@@ -78,7 +78,7 @@ export const WorkOrders: WorkOrderDocument[] = [
             "name": "Quality Control",
             "workCenterId": "wc-004",
             "status": "complete",
-            "startDate": "2026-01-20",
+            "startDate": "2026-02-02",
             "endDate": "2026-05-21"
         }
     },
