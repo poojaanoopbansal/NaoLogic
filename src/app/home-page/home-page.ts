@@ -130,21 +130,48 @@ export class HomePage implements OnInit {
   }
 
   onTimeScaleChange(event: any) {
-
+    this.timeScaleList = [];
+    switch (this.selectedTimeScale) {
+      case 'Day':
+        this.generateInitialDays();
+        break;
+      case 'Month':
+        this.generateInitialMonths();
+        break;
+    }
+    this.scrollToToday();
   }
 
   scrollToToday() {
-    const todayMonth = this.todayDate.getMonth();
-    const todayYear = this.todayDate.getFullYear();
-    const todayIndex = this.timeScaleList.findIndex(
+    let todayMonth = this.todayDate.getMonth();
+    let todayYear = this.todayDate.getFullYear();
+    let todayDay = this.todayDate.getDate();
+
+    let todayIndex = this.timeScaleList.findIndex(
       m => new Date(`${m.month} 1, ${m.year}`).getMonth() === todayMonth &&
         m.year === todayYear
     );
-
-    if (todayIndex === -1) return; // fallback
-
-    // Option 1: align today to left
-    this.viewport.scrollToIndex(todayIndex - 1, 'smooth');
+    switch (this.selectedTimeScale) {
+      case 'Day':
+        let todayMonthName = this.todayDate.toLocaleString('en-US', { month: 'short' });
+        // Find the day index within the month
+        const dayIndex = this.timeScaleList.findIndex(
+          d => d.day === todayDay && d.month === todayMonthName && d.year === todayYear
+        );
+        if (dayIndex !== -1) {
+          this.viewport.scrollToIndex(dayIndex - 1, 'smooth');
+        }
+        break;
+      case 'Month':
+        let todayIndex = this.timeScaleList.findIndex(
+          m => new Date(`${m.month} 1, ${m.year}`).getMonth() === todayMonth &&
+            m.year === todayYear
+        );
+        if (todayIndex !== -1) {
+          this.viewport.scrollToIndex(todayIndex - 1, 'smooth');
+        }
+        break;
+    }
     this.isInitialScroll = false;
   }
 
@@ -159,11 +186,25 @@ export class HomePage implements OnInit {
       return;
     }
     if (this.previousEndIndex !== range.end && range.end >= this.timeScaleList.length - 8) {
-      this.appendDates();
+      switch (this.selectedTimeScale) {
+        case 'Day':
+          this.appendDays();
+          break;
+        case 'Month':
+          this.appendMonths();
+          break;
+      }
       this.previousEndIndex = range.end;
     }
     if ((this.previousStartIndex !== range.start || this.previousStartIndex > range.start) && (range.start < 4 && range.end < this.previousEndIndex)) {
-      this.prependDates(4, range.start);
+      switch (this.selectedTimeScale) {
+        case 'Day':
+          this.prependDays(4, range.start);
+          break;
+        case 'Month':
+          this.prependMonths(4, range.start);
+          break;
+      }
       this.previousStartIndex = range.start;
       if (this.CSRF) {
         cancelAnimationFrame(this.CSRF);
@@ -213,11 +254,68 @@ export class HomePage implements OnInit {
       current.setMonth(current.getMonth() + 1);
     }
 
-    this.prependDates(8);
+    this.prependMonths(8);
+  }
+
+  generateInitialDays() {
+    const today = new Date();
+    let current = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    for (let i = 0; i <= this.itemsPerPage; i++) {
+      this.timeScaleList.push({
+        day: current.getDate(),
+        month: current.toLocaleString('en-US', { month: 'short' }),
+        year: current.getFullYear()
+      });
+
+      // Move to the next day
+      current.setDate(current.getDate() + 1);
+    }
+
+    this.prependDays(8);
+  }
+
+  appendDays() {
+    let lastElemnt = this.timeScaleList[this.timeScaleList.length - 1];
+    const monthIndex = new Date(`${lastElemnt.month} 1, ${lastElemnt.year}`).getMonth();
+    const current = new Date(lastElemnt.year, monthIndex, lastElemnt.day);
+    const newDates = [];
+    for (let i = 0; i <= this.itemsPerPage; i++) {
+      newDates.push({
+        day: current.getDate(),
+        month: current.toLocaleString('en-US', { month: 'short' }),
+        year: current.getFullYear()
+      });
+
+      // Move to the next day
+      current.setDate(current.getDate() + 1);
+      this.timeScaleList = [...this.timeScaleList, ...newDates];
+
+    }
+  }
+
+  prependDays(count: number = this.itemsPerPage, startIndex?: number) {
+    const first = this.timeScaleList[0];
+    const newDates = [];
+    const monthIndex = new Date(`${first.month} 1, ${first.year}`).getMonth();
+    const newMonths: { month: string; year: number; day: number }[] = [];
+    let currentDate = new Date(first.year, monthIndex, first.day);
+    currentDate.setDate(currentDate.getDate() - 1);
+
+    for (let i = 0; i < count; i++) {
+      newMonths.unshift({
+        month: currentDate.toLocaleString('en-US', { month: 'short' }),
+        year: currentDate.getFullYear(),
+        day: currentDate.getDate()
+      });
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
+
+    this.timeScaleList = [...newMonths, ...this.timeScaleList];
   }
 
 
-  prependDates(count: number = this.itemsPerPage, startIndex?: number) {
+  prependMonths(count: number = this.itemsPerPage, startIndex?: number) {
     const first = this.timeScaleList[0];
     const newDates = [];
     const monthIndex = new Date(`${first.month} 1, ${first.year}`).getMonth();
@@ -252,7 +350,7 @@ export class HomePage implements OnInit {
     // });
   }
 
-  appendDates() {
+  appendMonths() {
     const first = this.timeScaleList[this.timeScaleList.length - 1];
     const newDates = [];
     const monthIndex = new Date(`${first.month} 1, ${first.year}`).getMonth();
