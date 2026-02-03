@@ -154,24 +154,7 @@ export class HomePage implements OnInit {
     // Option 1: align today to left
     this.viewport.scrollToIndex(todayIndex - 1, 'smooth');
     this.isInitialScroll = false;
-    // Option 2: center today in viewport
-    // container.scrollLeft = todayEl.offsetLeft - container.clientWidth / 2 + todayEl.clientWidth / 2;
   }
-
-  // generateMonth(isFutureDates: boolean): any {
-  //   let baseDate = this.timeScaleList[this.timeScaleList.length - 1];
-  //   if (isFutureDates) {
-
-  //   }
-  //   const date = new Date(baseDate.getFullYear(), baseDate.getMonth() + offset, 1);
-  //   const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  //   return {
-  //     year: date.getFullYear(),
-  //     month: date.getMonth(),
-  //     name: date.toLocaleString('default', { month: 'short' }),
-  //     days: Array.from({ length: daysInMonth }, (_, i) => i + 1)
-  //   };
-  // }
 
   onScroll(event: any) {
     if (this.isInitialScroll) {
