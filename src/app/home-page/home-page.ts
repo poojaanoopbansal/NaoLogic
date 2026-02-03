@@ -101,9 +101,8 @@ export class HomePage implements OnInit {
         startDateTimeScaleObject = new Date(`${startDate.month} ${startDate.day}, ${startDate.year}`);
         if (startDateTimeScaleObject.getTime() >= startDateObj.getTime() && startDateTimeScaleObject.getTime() <= endDateObj.getTime()) {
           //the first block will have company name
-          const a = new Date(startDateTimeScaleObject.getFullYear(), startDateTimeScaleObject.getMonth(), startDateTimeScaleObject.getDate());
-          const b = new Date(startDateObj.getFullYear(), startDateObj.getMonth(), startDateObj.getDate());
-          if (a.getTime() === b.getTime()) {
+          const b = { year: startDateObj.getFullYear(), month: startDateObj.getMonth(), day: startDateObj.getDate() };
+          if (startDateTimeScaleObject.getFullYear() === b.year && startDateTimeScaleObject.getMonth() === b.month && startDateTimeScaleObject.getDate() === b.day) {
             data.barWidth = this.setWidthForBarForDays(workOrder, data);
           }
           return { workOrder, ...data };

@@ -25,7 +25,7 @@
                 <div class="time-scale-table">
                     <div class="flex-container">
                         <div *cdkVirtualFor="let timeScale of timeScaleList; 
-                        let i = index; trackBy: trackByIndex"
+                        let i = index; trackBy: trackByIndex" class="timescale-column"
                             id="{{timeScale.month}}-{{timeScale.day}}-{{timeScale.year}}" [attr.data-index]="i">
                             <div *ngIf="selectedTimeScale === TimeScaleType.Month" class="time-scale-cell-header">{{
                                 timeScale.month
@@ -35,7 +35,7 @@
                                 timeScale.month }} {{ timeScale.year }}</div>
                             <div class="current-date"
                                 *ngIf="todayIndex!==-1 && todaysDateObject.month === timeScale.month && todaysDateObject.year === timeScale.year && todaysDateObject.day === timeScale.day">
-                                Current Month
+                                Current {{selectedTimeScale}}
                             </div>
                             @for (workcenter of workCenterList; track $index) {
 
