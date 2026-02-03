@@ -56,7 +56,7 @@ export const WorkOrders: WorkOrderDocument[] = [
             "name": "CNC Machine 1",
             "workCenterId": "wc-002",
             "status": "open",
-            "startDate": "2026-02-02",
+            "startDate": "2026-02-04",
             "endDate": "2026-07-02"
         }
     },

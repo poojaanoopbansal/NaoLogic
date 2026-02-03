@@ -31,7 +31,7 @@ export class HomePage implements OnInit {
   workCenterList: Array<WorkCenterDocument> = WorkConters;
   workCenterObjectList: WorkOrderObjectListInterface = {};
   workOrderList: Array<WorkOrderDocument> = WorkOrders;
-  itemsPerPage = 30;
+  itemsPerPage = 20;
   lastScrollLeft = 0;
   readonly ITEM_SIZE = 114;
   isInitialScroll = false;
@@ -82,8 +82,10 @@ export class HomePage implements OnInit {
     let allWorkOrders = this.workCenterObjectList[workCenterId];
     let startDateTimeScaleObject = new Date(`${startDate.month} ${startDate.day}, ${startDate.year}`);
     let workOrdersList = allWorkOrders?.filter((workOrder: WorkOrderDocument) => {
-      let startDateObj = new Date(workOrder.data.startDate);
-      let endDateObj = new Date(workOrder.data.endDate);
+      let startDaySplit = workOrder.data.startDate.split('-');
+      let endDaySplit = workOrder.data.endDate.split('-');
+      let startDateObj = new Date(+startDaySplit[0], +startDaySplit[1] - 1, +startDaySplit[2]);
+      let endDateObj = new Date(+endDaySplit[0], +endDaySplit[1] - 1, +endDaySplit[2]);
       if (this.selectedTimeScale === this.TimeScaleType.Month) {
         startDateObj = new Date(startDateObj.getFullYear(), startDateObj.getMonth(), 1);
         endDateObj = new Date(endDateObj.getFullYear(), endDateObj.getMonth(), 1);
@@ -206,7 +208,7 @@ export class HomePage implements OnInit {
       this.previousEndIndex = range.end;
       return;
     }
-    if (this.previousEndIndex !== range.end && range.end >= this.timeScaleList.length - 12) {
+    if (this.previousEndIndex !== range.end && range.end >= this.timeScaleList.length - 8) {
       switch (this.selectedTimeScale) {
         case this.TimeScaleType.Day:
           this.appendDays();
