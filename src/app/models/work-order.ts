@@ -35,3 +35,12 @@ export interface TimeScaleDateObjectWithBarRadius {
     isBarRadiusLeft?: boolean;
     isBarRadiusRight?: boolean;
 }
+
+export let TimeScaleType = {
+    Hour: 'Hour',
+    Day: 'Day',
+    Week: 'Week',
+    Month: 'Month'
+}
+
+

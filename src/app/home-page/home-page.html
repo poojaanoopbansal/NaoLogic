@@ -27,9 +27,11 @@
                         <div *cdkVirtualFor="let timeScale of timeScaleList; 
                         let i = index; trackBy: trackByIndex"
                             id="{{timeScale.month}}-{{timeScale.day}}-{{timeScale.year}}" [attr.data-index]="i">
-                            <div *ngIf="selectedTimeScale === 'Month'" class="time-scale-cell-header">{{ timeScale.month
+                            <div *ngIf="selectedTimeScale === TimeScaleType.Month" class="time-scale-cell-header">{{
+                                timeScale.month
                                 }} {{ timeScale.year }}</div>
-                            <div *ngIf="selectedTimeScale === 'Day'" class="time-scale-cell-header">{{timeScale.day}} {{
+                            <div *ngIf="selectedTimeScale === TimeScaleType.Day" class="time-scale-cell-header">
+                                {{timeScale.day}} {{
                                 timeScale.month }} {{ timeScale.year }}</div>
                             <div class="current-date"
                                 *ngIf="todayIndex!==-1 && todaysDateObject.month === timeScale.month && todaysDateObject.year === timeScale.year && todaysDateObject.day === timeScale.day">
@@ -42,7 +44,7 @@
                                 timeScale)}}</span>
                             <div class="time-scale-cell-data"
                                 [ngClass]="[$index === 0 ? 'first-row-data' : 'other-rows-data',
-                            (todayIndex!==-1 && todaysDateObject.month === timeScale.month && todaysDateObject.year === timeScale.year && todaysDateObject.day === timeScale.day)?'current-day': '']">
+                            (todaysDateObject.month === timeScale.month && todaysDateObject.year === timeScale.year && todaysDateObject.day === timeScale.day)?'current-day': '']">
                                 <div *ngIf="workOrderBarRadiusData.startDatePoint"
                                     class="bar bar-{{workOrderBarRadiusData.workOrder?.data?.status}}"
                                     [style.left.px]="workOrderBarRadiusData.startDatePoint"
