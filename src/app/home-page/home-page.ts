@@ -77,7 +77,8 @@ export class HomePage implements OnInit {
     });
   }
 
-  findWorkCenterNameInCurrentTimeScale(workCenterId: string, startDate: TimeScaleDateObject) {
+  findWorkCenterNameInCurrentTimeScale(workCenterId: string,
+    startDate: TimeScaleDateObject, timeScaleIndex: number) {
     let data: any = {};
     let allWorkOrders = this.workCenterObjectList[workCenterId];
     let startDateTimeScaleObject = new Date(`${startDate.month} ${startDate.day}, ${startDate.year}`);
@@ -86,6 +87,7 @@ export class HomePage implements OnInit {
       let endDaySplit = workOrder.data.endDate.split('-');
       let startDateObj = new Date(+startDaySplit[0], +startDaySplit[1] - 1, +startDaySplit[2]);
       let endDateObj = new Date(+endDaySplit[0], +endDaySplit[1] - 1, +endDaySplit[2]);
+      //working code
       if (this.selectedTimeScale === this.TimeScaleType.Month) {
         startDateObj = new Date(startDateObj.getFullYear(), startDateObj.getMonth(), 1);
         endDateObj = new Date(endDateObj.getFullYear(), endDateObj.getMonth(), 1);
@@ -93,20 +95,24 @@ export class HomePage implements OnInit {
         if (startDateTimeScaleObject.getTime() >= startDateObj.getTime() && startDateTimeScaleObject.getTime() <= endDateObj.getTime()) {
           //the first block will have company name
           if (startDateTimeScaleObject.getTime() === startDateObj.getTime()) {
-            data.barWidth = this.setWidthForBarForMonth(workOrder, data);
+            data.barWidth = this.setWidthForBarForMonth(workOrder.data.startDate, workOrder.data.endDate, data);
           }
           return { workOrder, ...data };
         } else {
           return null;
         }
-      } else if (this.selectedTimeScale === this.TimeScaleType.Day) {
+      }
+      else if (this.selectedTimeScale === this.TimeScaleType.Day) {
         startDateTimeScaleObject = new Date(`${startDate.month} ${startDate.day}, ${startDate.year}`);
         if (startDateTimeScaleObject.getTime() >= startDateObj.getTime() && startDateTimeScaleObject.getTime() <= endDateObj.getTime()) {
           //the first block will have company name
           const b = { year: startDateObj.getFullYear(), month: startDateObj.getMonth(), day: startDateObj.getDate() };
           if (startDateTimeScaleObject.getFullYear() === b.year && startDateTimeScaleObject.getMonth() === b.month && startDateTimeScaleObject.getDate() === b.day) {
-            data.barWidth = this.setWidthForBarForDays(workOrder, data);
+            data.barWidth = this.setWidthForBarForDays(workOrder.data.startDate, workOrder.data.endDate, data, true);
+            this.cutWidthBarWhichIsNotVisible(data, timeScaleIndex);
+            // data.width = data.barWidth - this.cutWidthBarWhichIsNotVisible(endDateObj, workOrder.data.endDate, data);
           }
+
           return { workOrder, ...data };
         } else {
           return null;
@@ -117,10 +123,20 @@ export class HomePage implements OnInit {
   }
 
 
+  cutWidthBarWhichIsNotVisible(data: any, timeScaleIndex: number) {
+    let range = this.viewport.getRenderedRange();
+    let totlaVirtualViewPortSize = this.viewport.getViewportSize();
+    let widthOFNoBar = (timeScaleIndex - range.start) * this.ITEM_SIZE;
+    if (data.barWidth > totlaVirtualViewPortSize - widthOFNoBar) {
+      data.barWidth = totlaVirtualViewPortSize - widthOFNoBar;
+    }
+  }
+
+
   //calculate width for bar with fraction
-  setWidthForBarForMonth(workOrder: WorkOrderDocument, data: any) {
-    let startDateObj = new Date(workOrder.data.startDate);
-    let endDateObj = new Date(workOrder.data.endDate);
+  setWidthForBarForMonth(startDate: string, endDate: string, data: any) {
+    let startDateObj = new Date(startDate);
+    let endDateObj = new Date(endDate);
     // Calculate the difference in days
     let day = startDateObj.getDate();
     let month = startDateObj.getMonth();
@@ -135,9 +151,9 @@ export class HomePage implements OnInit {
     return ((12 * this.ITEM_SIZE) / 365) * diffDays;
   }
 
-  setWidthForBarForDays(workOrder: WorkOrderDocument, data: any) {
-    let startDateObj = new Date(workOrder.data.startDate);
-    let endDateObj = new Date(workOrder.data.endDate);
+  setWidthForBarForDays(startDate: string, endDate: string, data: any, isSetStartDatePoint = false) {
+    let startDateObj = new Date(startDate);
+    let endDateObj = new Date(endDate);
     // Calculate the difference in days
     let day = startDateObj.getDate();
     let month = startDateObj.getMonth();

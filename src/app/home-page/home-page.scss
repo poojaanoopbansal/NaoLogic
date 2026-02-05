@@ -209,6 +209,7 @@
                 max-width: 114px;
                 border-right: 1px solid rgba(230, 235, 240, 1);
                 padding-top: 6px;
+                position: relative;
             }
 
             ::ng-deep {
@@ -222,11 +223,9 @@
                 margin-bottom: 6px;
                 height: 38px;
                 position: relative;
-                z-index: 1000;
-                margin-right: -4px;
+                z-index: 9999;
                 display: flex;
                 justify-content: space-between;
-                position: relative;
                 border-radius: 8px;
                 align-items: center;
                 box-shadow: 0px 0 0 1px rgba(209, 250, 179, 1);
